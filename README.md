@@ -11,7 +11,7 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 - **Assertions & Object Mapping**: AssertJ & Jackson Databind
 - **Reporting**:
   - Built-in Cucumber HTML Reporter (`target/cucumber-reports/cucumber.html`)
-  - Masterthought Cucumber HTML Overview Reporter (`target/cucumber-html-reports/cucumber-html-reports/overview-features.html`)
+  - Masterthought Cucumber HTML Overview Reporter (`target/cucumber-html-reports/overview-features.html`)
 
 ---
 
@@ -77,14 +77,17 @@ mvn test -Dcucumber.filter.tags="@delete"
 ### 4. Run by Functional Category Tags
 Execute targeted subsets based on operational priority and risk level:
 ```bash
-# Smoke test suite (critical path checks)
-mvn test -Dcucumber.filter.tags="@smoke"
+# Sanity test suite (critical path checks)
+mvn test -Dcucumber.filter.tags="@sanity"
 
 # Positive validation suite
 mvn test -Dcucumber.filter.tags="@positive"
 
 # Negative validation & boundary suite
 mvn test -Dcucumber.filter.tags="@negative"
+
+# API integration suite
+mvn test -Dcucumber.filter.tags="@integration"
 
 # Regression test suite
 mvn test -Dcucumber.filter.tags="@regression"
@@ -113,37 +116,104 @@ Then attach your IDE's Remote JVM Debugger configuration to port `5005`.
 
 ---
 
-## 📊 Viewing HTML Reports
+## 📊 Viewing HTML Reports & Examples
 
-Automated test reporting provides stakeholders with clear visibility into test health and failure diagnostics.
+Automated test reporting provides stakeholders and engineers with immediate feedback, visual metrics, and failure diagnostics.
 
 ### 1. Report File Locations
 - **Standard Cucumber HTML Report**:
   `target/cucumber-reports/cucumber.html`
-- **Masterthought Overview Report** (Includes detailed step breakdowns, tag analytics, and charts):
-  `target/cucumber-html-reports/cucumber-html-reports/overview-features.html`
+- **Masterthought Overview Report** (Includes interactive charts, tag statistics, scenario execution timelines, and step-level response logging):
+  `target/cucumber-html-reports/overview-features.html`
 
 ### 2. Open Reports Directly in Browser
 
 **macOS:**
 ```bash
-# Open Standard Report
+# Open Standard Cucumber Report
 open target/cucumber-reports/cucumber.html
 
 # Open Masterthought Overview Report
-open target/cucumber-html-reports/cucumber-html-reports/overview-features.html
+open target/cucumber-html-reports/overview-features.html
 ```
 
 **Linux:**
 ```bash
 xdg-open target/cucumber-reports/cucumber.html
-xdg-open target/cucumber-html-reports/cucumber-html-reports/overview-features.html
+xdg-open target/cucumber-html-reports/overview-features.html
 ```
 
 **Windows (PowerShell / Command Prompt):**
 ```powershell
 start target/cucumber-reports/cucumber.html
-start target/cucumber-html-reports/cucumber-html-reports/overview-features.html
+start target/cucumber-html-reports/overview-features.html
+```
+
+---
+
+### 3. Example Test Report HTML Output
+
+#### A. Masterthought Features Overview Dashboard
+When generated via `mvn clean verify` or `mvn net.masterthought:maven-cucumber-reporting:generate`, the overview report displays aggregate KPIs, interactive doughnut charts (Features, Scenarios, Steps), and per-feature execution metrics:
+
+```
+========================================================================================================
+                                   Petstore API Automation Report
+========================================================================================================
+ Features: 3 Passed / 0 Failed (100%)  |  Scenarios: 20 Passed / 0 Failed (100%)  |  Steps: 85 Passed
+ Total Duration: 24.31s                |  Status: PASSED                         |  Build: #1
+========================================================================================================
+
+--------------------------------------------------------------------------------------------------------
+Feature                                              Steps (Pass/Fail)    Scenarios (Pass/Fail)   Status
+--------------------------------------------------------------------------------------------------------
+POST /pet - Pet Creation Scenarios                   35 / 0 (100%)        8 / 0 (100%)            PASSED
+GET /pet/findByStatus - Find Pets by Status          28 / 0 (100%)        7 / 0 (100%)            PASSED
+DELETE /pet/{petId} - Pet Deletion Scenarios         22 / 0 (100%)        5 / 0 (100%)            PASSED
+--------------------------------------------------------------------------------------------------------
+TOTAL                                                85 / 0 (100%)        20 / 0 (100%)           PASSED
+========================================================================================================
+```
+
+#### B. HTML Feature & Scenario Details Example
+Each scenario provides expandable step execution records, timestamps, and embedded API response payloads:
+
+```html
+<!-- Example of scenario structure rendered in Cucumber HTML Reports -->
+<div class="card scenario-container">
+  <div class="card-header bg-success text-white">
+    <span class="badge badge-light">@smoke</span>
+    <span class="badge badge-light">@post</span>
+    <strong>Scenario:</strong> Successfully create a new pet with dynamic ID and valid payload
+    <span class="float-right badge badge-success">PASSED (421ms)</span>
+  </div>
+  <div class="card-body">
+    <ul class="steps-list">
+      <li class="step passed">✔ <strong>Given</strong> the pet API endpoint is available</li>
+      <li class="step passed">✔ <strong>When</strong> I create a pet with dynamic ID, name "Fluffy" and status "available"</li>
+      <li class="step passed">✔ <strong>Then</strong> the response status code should be 200</li>
+      <li class="step passed">✔ <strong>And</strong> the response pet name should be "Fluffy"</li>
+      <li class="step passed">✔ <strong>And</strong> the response pet status should be "available"</li>
+    </ul>
+
+    <!-- Embedded HTTP API Response Attachment -->
+    <div class="hook-attachment">
+      <button class="btn btn-sm btn-outline-info" data-toggle="collapse" data-target="#apiResponsePayload">
+        View API Response [status: 200 OK]
+      </button>
+      <div id="apiResponsePayload" class="collapse show mt-2">
+        <pre class="bg-dark text-light p-2 rounded"><code>{
+  "id": 1729613524001,
+  "category": { "id": 1, "name": "Dogs" },
+  "name": "Fluffy",
+  "photoUrls": ["https://example.com/photo.jpg"],
+  "tags": [{ "id": 1, "name": "friendly" }],
+  "status": "available"
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</div>
 ```
 
 ---
@@ -152,6 +222,6 @@ start target/cucumber-html-reports/cucumber-html-reports/overview-features.html
 
 | Endpoint | Feature File | Scenarios Covered | Key Verifications |
 |---|---|---|---|
-| `POST /pet` | `pet_post.feature` | 6 Scenarios | Dynamic ID creation, status variants (`available`, `pending`, `sold`), missing fields, malformed JSON |
+| `POST /pet` | `pet_post.feature` | 8 Scenarios | Dynamic ID creation, status variants (`available`, `pending`, `sold`), missing fields, malformed JSON |
 | `GET /pet/findByStatus` | `pet_find_by_status.feature` | 7 Scenarios | Single status filter, multi-status query, unsupported status, omitted param, non-matching query |
 | `DELETE /pet/{petId}` | `pet_delete.feature` | 5 Scenarios | Created pet deletion, verify 404 after deletion, non-existent ID, non-numeric ID, double deletion idempotency |

@@ -115,6 +115,16 @@
                 <groupId>net.masterthought</groupId>
                 <artifactId>maven-cucumber-reporting</artifactId>
                 <version>${maven-cucumber-reporting.version}</version>
+                <configuration>
+                    <projectName>Petstore API Playwright Automation</projectName>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <inputDirectory>${project.build.directory}/cucumber-reports</inputDirectory>
+                    <jsonFiles>
+                        <param>**/*.json</param>
+                    </jsonFiles>
+                    <mergeFeaturesById>false</mergeFeaturesById>
+                    <skipEmptyJSONFiles>true</skipEmptyJSONFiles>
+                </configuration>
                 <executions>
                     <execution>
                         <id>execution</id>
@@ -122,16 +132,6 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <configuration>
-                            <projectName>Petstore API Playwright Automation</projectName>
-                            <outputDirectory>${project.build.directory}/cucumber-html-reports</outputDirectory>
-                            <inputDirectory>${project.build.directory}/cucumber-reports</inputDirectory>
-                            <jsonFiles>
-                                <param>**/*.json</param>
-                            </jsonFiles>
-                            <mergeFeaturesById>false</mergeFeaturesById>
-                            <skipEmptyJSONFiles>true</skipEmptyJSONFiles>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
