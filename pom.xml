@@ -9,17 +9,16 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <playwright.version>1.49.0</playwright.version>
-        <cucumber.version>7.20.1</cucumber.version>
-        <junit.jupiter.version>5.11.3</junit.jupiter.version>
-        <junit.platform.version>1.11.3</junit.platform.version>
-        <jackson.version>2.18.2</jackson.version>
-        <assertj.version>3.26.3</assertj.version>
-        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-        <maven-cucumber-reporting.version>5.8.2</maven-cucumber-reporting.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <playwright.version>1.63.0</playwright.version>
+        <cucumber.version>8.0.4</cucumber.version>
+        <junit.version>6.1.3</junit.version>
+        <jackson.version>3.1.1</jackson.version>
+        <assertj.version>3.27.7</assertj.version>
+        <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.6.0</maven-surefire-plugin.version>
+        <maven-cucumber-reporting.version>5.11.0</maven-cucumber-reporting.version>
     </properties>
 
     <dependencyManagement>
@@ -34,7 +33,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>${junit.jupiter.version}</version>
+                <version>${junit.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -61,16 +60,10 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- JUnit 5 Suite for Cucumber Execution -->
+        <!-- JUnit Suite for Cucumber Execution -->
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite</artifactId>
-            <version>${junit.platform.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -82,7 +75,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
             <scope>test</scope>
@@ -94,7 +87,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
+                <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <release>21</release>
                 </configuration>
@@ -115,6 +108,16 @@
                 <groupId>net.masterthought</groupId>
                 <artifactId>maven-cucumber-reporting</artifactId>
                 <version>${maven-cucumber-reporting.version}</version>
+                <configuration>
+                    <projectName>Petstore API Playwright Automation</projectName>
+                    <outputDirectory>${project.build.directory}</outputDirectory>
+                    <inputDirectory>${project.build.directory}/cucumber-reports</inputDirectory>
+                    <jsonFiles>
+                        <param>**/*.json</param>
+                    </jsonFiles>
+                    <mergeFeaturesById>false</mergeFeaturesById>
+                    <skipEmptyJSONFiles>true</skipEmptyJSONFiles>
+                </configuration>
                 <executions>
                     <execution>
                         <id>execution</id>
@@ -122,16 +125,6 @@
                         <goals>
                             <goal>generate</goal>
                         </goals>
-                        <configuration>
-                            <projectName>Petstore API Playwright Automation</projectName>
-                            <outputDirectory>${project.build.directory}/cucumber-html-reports</outputDirectory>
-                            <inputDirectory>${project.build.directory}/cucumber-reports</inputDirectory>
-                            <jsonFiles>
-                                <param>**/*.json</param>
-                            </jsonFiles>
-                            <mergeFeaturesById>false</mergeFeaturesById>
-                            <skipEmptyJSONFiles>true</skipEmptyJSONFiles>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

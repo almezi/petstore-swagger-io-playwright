@@ -71,6 +71,8 @@ By automating these 18 scenarios, we maximize regression protection, achieve pre
 # Technical Design
 
 ### Current Implementation
+> Historical snapshot taken at planning time. For the stack and structure as actually shipped, see **As-Built Status & Deltas** at the end of this document.
+
 The repository already provides:
 - Playwright Java (`com.microsoft.playwright:playwright:1.49.0`) integrated with Cucumber Java (`7.20.1`) and JUnit Platform Suite (`junit-platform-suite:1.11.3`).
 - `TestContext.java` utilizing `ThreadLocal` for managing `Playwright`, `APIRequestContext`, `APIResponse`, raw response strings, and session attributes.
@@ -268,3 +270,28 @@ Configure execution tags, JUnit suite filters, and verify HTML report generation
 - Update `TestRunner.java` to support running targeted test suites via Maven CLI arguments (`-Dcucumber.filter.tags="..."`).
 - Execute `mvn clean verify` to validate all 18 test scenarios across endpoints.
 - Confirm Masterthought HTML report generation in `target/cucumber-html-reports/` and standard report in `target/cucumber-reports/`.
+
+# As-Built Status & Deltas
+
+> Updated 2026-11-08 after the audit remediation. This section records what was actually delivered where it differs from the plan above; the plan text itself is kept as the historical record.
+
+## Stack as shipped
+- Playwright Java 1.63.0, Cucumber Java 8.0.4 (BOM), JUnit Platform Suite 6.1.3 via `org.junit:junit-bom`, AssertJ 3.27.7, Jackson 3.1.1 (new `tools.jackson` package), compiled with `--release 21`.
+
+## Scenario count
+- The plan defines **18 test cases**; the suite ships **20 executable scenarios** because POST-02 became a Scenario Outline with 3 example rows (`available`, `pending`, `sold`).
+- The default run selects the 17 scenarios tagged `@regression`; the 3 `@sanity` happy paths run via `mvn test -Dcucumber.filter.tags="@sanity"`.
+
+## Tags as shipped
+- In use: `@post`, `@get`, `@delete`, `@integration`, `@sanity`, `@positive`, `@negative`, `@boundary`, `@regression`, `@filter`, `@idempotency`.
+- The plan's `@smoke` and `@cleanup` tags were never adopted.
+
+## Design deltas
+1. **Tag-filter default location:** the default `cucumber.filter.tags=@regression` lives in `src/test/resources/junit-platform.properties`, *not* `cucumber.properties` — the Cucumber JUnit Platform engine does not apply a filter default from the latter (verified by test-gate: the default run executed 20/0-skipped until the file was moved). CLI `-Dcucumber.filter.tags=...` overrides it; `TestRunner` no longer hardcodes the filter.
+2. **Multi-status query:** implemented with `URLEncoder.encode(..., UTF_8)` repeated params, not `RequestOptions.setQueryParam` — Playwright's `RequestOptions` overwrites same-key params in a `LinkedHashMap` (verified against the 1.63.0 sources), so it cannot express OpenAPI `collectionFormat: multi`.
+3. **TestContext:** the session-attribute map and the custom-header `postRaw` overload were removed as dead code; raw-payload support is the two-argument `postRaw(String, String)`.
+4. **Hooks:** one shared `Playwright` instance (double-checked locking, closed by a JVM shutdown hook) instead of one per scenario; the API key is read from `-Dapi.key` (default `special-key`); `setIgnoreHTTPSErrors` was removed; request-context disposal happens in the `finally` block.
+5. **Step naming:** GET steps read `I find pets by status {string}` (plan: "…by status parameter…"); post-deletion verification reuses `I retrieve the previously created pet` plus a 404 status assertion instead of the planned `Then the pet should no longer exist when retrieved by ID`.
+
+## NFR outcome
+- The "< 15 seconds" execution target is not met against the live shared API: the 17-scenario default run measures ~25s (down from ~32s after the shared-Playwright change). The budget is dominated by per-request latency to `petstore.swagger.io`, not framework overhead.

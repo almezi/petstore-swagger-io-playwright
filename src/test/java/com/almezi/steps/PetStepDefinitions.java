@@ -1,11 +1,9 @@
 package com.almezi.steps;
 
 import com.almezi.context.TestContext;
-import com.almezi.model.Category;
 import com.almezi.model.Pet;
-import com.almezi.model.Tag;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 import com.microsoft.playwright.APIResponse;
 import com.microsoft.playwright.options.RequestOptions;
 import io.cucumber.java.en.And;
@@ -13,9 +11,9 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
-import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,37 +27,9 @@ public class PetStepDefinitions {
         assertThat(context.getRequestContext()).isNotNull();
     }
 
-    @When("I create a pet with id {long}, name {string} and status {string}")
-    public void iCreateAPetWithIdNameAndStatus(long id, String name, String status) throws IOException {
-        Pet pet = new Pet(id, name, status);
-        pet.setCategory(new Category(1L, "Dogs"));
-        pet.setPhotoUrls(Collections.singletonList("https://example.com/photo.jpg"));
-        pet.setTags(Collections.singletonList(new Tag(1L, "friendly")));
-
-        String payload = context.getObjectMapper().writeValueAsString(pet);
-
-        APIResponse response = context.getRequestContext().post("pet",
-                RequestOptions.create().setData(payload));
-        context.setResponse(response);
-    }
-
     @When("I retrieve the pet with id {long}")
     public void iRetrieveThePetWithId(long id) {
         APIResponse response = context.getRequestContext().get("pet/" + id);
-        context.setResponse(response);
-    }
-
-    @When("I update the pet id {long} with name {string} and status {string}")
-    public void iUpdateThePetIdWithNameAndStatus(long id, String name, String status) throws IOException {
-        Pet pet = new Pet(id, name, status);
-        pet.setCategory(new Category(1L, "Dogs"));
-        pet.setPhotoUrls(Collections.singletonList("https://example.com/updated.jpg"));
-        pet.setTags(Collections.singletonList(new Tag(1L, "domestic")));
-
-        String payload = context.getObjectMapper().writeValueAsString(pet);
-
-        APIResponse response = context.getRequestContext().put("pet",
-                RequestOptions.create().setData(payload));
         context.setResponse(response);
     }
 
@@ -72,7 +42,9 @@ public class PetStepDefinitions {
 
     @When("I find pets by multiple statuses {string} and {string}")
     public void iFindPetsByMultipleStatuses(String status1, String status2) {
-        APIResponse response = context.getRequestContext().get("pet/findByStatus?status=" + status1 + "&status=" + status2);
+        APIResponse response = context.getRequestContext().get("pet/findByStatus?status="
+                + URLEncoder.encode(status1, StandardCharsets.UTF_8)
+                + "&status=" + URLEncoder.encode(status2, StandardCharsets.UTF_8));
         context.setResponse(response);
     }
 
@@ -89,7 +61,7 @@ public class PetStepDefinitions {
     }
 
     @Given("a pet exists with dynamic ID and name {string}")
-    public void aPetExistsWithDynamicIdAndName(String name) throws IOException {
+    public void aPetExistsWithDynamicIdAndName(String name) {
         long id = context.generateDynamicPetId();
         Pet pet = Pet.createValidPet(id, name, "available");
         String payload = context.getObjectMapper().writeValueAsString(pet);
@@ -137,7 +109,7 @@ public class PetStepDefinitions {
     }
 
     @When("I create a pet with dynamic ID, name {string} and status {string}")
-    public void iCreateAPetWithDynamicIdNameAndStatus(String name, String status) throws IOException {
+    public void iCreateAPetWithDynamicIdNameAndStatus(String name, String status) {
         long id = context.generateDynamicPetId();
         Pet pet = Pet.createValidPet(id, name, status);
         String payload = context.getObjectMapper().writeValueAsString(pet);
@@ -148,7 +120,7 @@ public class PetStepDefinitions {
     }
 
     @When("I submit a pet creation request with missing name field")
-    public void iSubmitAPetCreationRequestWithMissingNameField() throws IOException {
+    public void iSubmitAPetCreationRequestWithMissingNameField() {
         long id = context.generateDynamicPetId();
         Pet pet = Pet.createWithoutName(id, "available");
         String payload = context.getObjectMapper().writeValueAsString(pet);
@@ -159,7 +131,7 @@ public class PetStepDefinitions {
     }
 
     @When("I submit a pet creation request with missing photoUrls field")
-    public void iSubmitAPetCreationRequestWithMissingPhotoUrlsField() throws IOException {
+    public void iSubmitAPetCreationRequestWithMissingPhotoUrlsField() {
         long id = context.generateDynamicPetId();
         Pet pet = Pet.createWithoutPhotoUrls(id, "NoPhotoPet", "available");
         String payload = context.getObjectMapper().writeValueAsString(pet);
@@ -203,7 +175,7 @@ public class PetStepDefinitions {
     }
 
     @And("the response pet id should match the created dynamic ID")
-    public void theResponsePetIdShouldMatchTheCreatedDynamicId() throws IOException {
+    public void theResponsePetIdShouldMatchTheCreatedDynamicId() {
         Long expectedId = context.getLastPetId();
         assertThat(expectedId).isNotNull();
         JsonNode jsonNode = context.getObjectMapper().readTree(context.getResponseBody());
@@ -211,32 +183,26 @@ public class PetStepDefinitions {
     }
 
     @And("the response pet name should be {string}")
-    public void theResponsePetNameShouldBe(String expectedName) throws IOException {
+    public void theResponsePetNameShouldBe(String expectedName) {
         JsonNode jsonNode = context.getObjectMapper().readTree(context.getResponseBody());
         assertThat(jsonNode.get("name").asText()).isEqualTo(expectedName);
     }
 
     @And("the response pet status should be {string}")
-    public void theResponsePetStatusShouldBe(String expectedStatus) throws IOException {
+    public void theResponsePetStatusShouldBe(String expectedStatus) {
         JsonNode jsonNode = context.getObjectMapper().readTree(context.getResponseBody());
         assertThat(jsonNode.get("status").asText()).isEqualTo(expectedStatus);
     }
 
-    @And("the response pet id should be {long}")
-    public void theResponsePetIdShouldBe(long expectedId) throws IOException {
-        JsonNode jsonNode = context.getObjectMapper().readTree(context.getResponseBody());
-        assertThat(jsonNode.get("id").asLong()).isEqualTo(expectedId);
-    }
-
     @Then("the response should contain a list of pets with status {string}")
-    public void theResponseShouldContainAListOfPetsWithStatus(String expectedStatus) throws IOException {
+    public void theResponseShouldContainAListOfPetsWithStatus(String expectedStatus) {
         List<Pet> pets = context.getObjectMapper().readValue(context.getResponseBody(), new TypeReference<List<Pet>>() {});
         assertThat(pets).isNotEmpty();
         assertThat(pets).allMatch(pet -> expectedStatus.equalsIgnoreCase(pet.getStatus()));
     }
 
     @Then("the response should contain only pets matching one of statuses {string}")
-    public void theResponseShouldContainOnlyPetsMatchingOneOfStatuses(String statuses) throws IOException {
+    public void theResponseShouldContainOnlyPetsMatchingOneOfStatuses(String statuses) {
         List<Pet> pets = context.getObjectMapper().readValue(context.getResponseBody(), new TypeReference<List<Pet>>() {});
         List<String> allowed = Arrays.stream(statuses.split(","))
                 .map(String::trim)
@@ -247,14 +213,14 @@ public class PetStepDefinitions {
     }
 
     @And("the response should contain an empty list of pets")
-    public void theResponseShouldContainAnEmptyListOfPets() throws IOException {
+    public void theResponseShouldContainAnEmptyListOfPets() {
         JsonNode node = context.getObjectMapper().readTree(context.getResponseBody());
         assertThat(node.isArray()).isTrue();
         assertThat(node.isEmpty()).isTrue();
     }
 
     @And("the response should be a valid JSON array")
-    public void theResponseShouldBeAValidJsonArray() throws IOException {
+    public void theResponseShouldBeAValidJsonArray() {
         JsonNode node = context.getObjectMapper().readTree(context.getResponseBody());
         assertThat(node.isArray()).isTrue();
     }

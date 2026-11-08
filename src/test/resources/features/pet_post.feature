@@ -1,10 +1,10 @@
-@post @regression
+@post @integration
 Feature: POST /pet - Pet Creation Scenarios
 
   Background:
     Given the pet API endpoint is available
 
-  @smoke @positive
+  @sanity @positive
   Scenario: Successfully add a new valid pet
     When I create a pet with dynamic ID, name "BuddyPlaywright" and status "available"
     Then the response status code should be 200
@@ -12,7 +12,7 @@ Feature: POST /pet - Pet Creation Scenarios
     And the response pet status should be "available"
     And the response pet id should match the created dynamic ID
 
-  @positive
+  @positive @regression
   Scenario Outline: Add pet with each valid status <status>
     When I create a pet with dynamic ID, name "StatusPet" and status "<status>"
     Then the response status code should be 200
@@ -25,23 +25,23 @@ Feature: POST /pet - Pet Creation Scenarios
       | pending   |
       | sold      |
 
-  @negative @boundary
+  @negative @boundary @regression
   Scenario: Submit pet creation request with missing name field
     When I submit a pet creation request with missing name field
     Then the response status code should be one of 200, 400, or 405
 
-  @negative @boundary
+  @negative @boundary @regression
   Scenario: Submit pet creation request with missing photoUrls field
     When I submit a pet creation request with missing photoUrls field
     Then the response status code should be one of 200, 400, or 405
 
-  @negative @boundary
+  @negative @boundary @regression
   Scenario: Submit pet creation request with unsupported status
     When I create a pet with dynamic ID, name "InvalidStatusPet" and status "unknown_status"
     Then the response status code should be one of 200, 400, or 405
     And the response pet status should be "unknown_status"
 
-  @negative
+  @negative @regression
   Scenario: Submit pet creation request with malformed JSON
     When I submit a raw pet creation payload:
       """
