@@ -1,14 +1,15 @@
 # Petstore API Automation with Playwright & Cucumber
 
-An automated API test suite for the Swagger Petstore API designed to maximize test coverage, defect detection, and execution efficiency using **Microsoft Playwright for Java**, **Cucumber (BDD)**, **JUnit 5 Platform Suite**, and comprehensive **HTML Reporting**.
+An automated API test suite for the Swagger Petstore API designed to maximize test coverage, defect detection, and execution efficiency using **Microsoft Playwright for Java**, **Cucumber (BDD)**, **JUnit 6 Platform Suite**, and comprehensive **HTML Reporting**.
 
 ---
 
 ## 🚀 Key Features & Tech Stack
-- **API Engine**: Microsoft Playwright (`APIRequestContext` for ultra-fast, lightweight HTTP network operations without browser overhead)
-- **BDD Framework**: Cucumber Java 7 & Gherkin Features for human-readable specification
-- **Test Runner**: JUnit Platform Suite (`@Suite`)
-- **Assertions & Object Mapping**: AssertJ & Jackson Databind
+- **Runtime**: Java 21 (LTS) — required to build and run
+- **API Engine**: Microsoft Playwright 1.63 (`APIRequestContext` for ultra-fast, lightweight HTTP network operations without browser overhead)
+- **BDD Framework**: Cucumber Java 8 & Gherkin Features for human-readable specification
+- **Test Runner**: JUnit Platform Suite 6 (`@Suite`)
+- **Assertions & Object Mapping**: AssertJ 3.27 & Jackson 3 Databind
 - **Reporting**:
   - Built-in Cucumber HTML Reporter (`target/cucumber-reports/cucumber.html`)
   - Masterthought Cucumber HTML Overview Reporter (`target/cucumber-html-reports/overview-features.html`)
@@ -34,7 +35,7 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 │       │           │   ├── Pet.java                  # Pet domain model
 │       │           │   └── Tag.java                  # Tag model
 │       │           ├── runner
-│       │           │   └── TestRunner.java           # JUnit 5 suite runner for Cucumber features
+│       │           │   └── TestRunner.java           # JUnit 6 suite runner for Cucumber features
 │       │           └── steps
 │       │               └── PetStepDefinitions.java   # Step definitions using Playwright APIRequestContext
 │       └── resources
@@ -49,14 +50,16 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 
 ## 🧪 Testing & Test Execution
 
-### 1. Execute the Full Test Suite & Generate Reports
-To achieve comprehensive verification across all 18 test cases and produce complete execution analytics:
+> **Requirement**: JDK 21 (LTS). The build compiles with `--release 21`, so Maven must run on JDK 21+ (`JAVA_HOME` pointed at a JDK 21 install).
+
+### 1. Execute the Default Test Suite & Generate Reports
+The suite contains 20 scenarios; the default run selects the 17 tagged `@regression` and skips the 3 `@sanity` scenarios (execute those via `mvn test -Dcucumber.filter.tags="@sanity"`), producing complete execution analytics:
 ```bash
 mvn clean verify
 ```
 
 ### 2. Execute Fast Test Runs
-To run all automated scenarios quickly during active development:
+To run the default `@regression` selection quickly during active development:
 ```bash
 mvn test
 ```
@@ -75,7 +78,7 @@ mvn test -Dcucumber.filter.tags="@delete"
 ```
 
 ### 4. Run by Functional Category Tags
-Execute targeted subsets based on operational priority and risk level:
+The default suite runs `@regression` only; these `-Dcucumber.filter.tags` values change that selection. Execute targeted subsets based on operational priority and risk level:
 ```bash
 # Sanity test suite (critical path checks)
 mvn test -Dcucumber.filter.tags="@sanity"
@@ -160,18 +163,18 @@ When generated via `mvn clean verify` or `mvn net.masterthought:maven-cucumber-r
 ========================================================================================================
                                    Petstore API Automation Report
 ========================================================================================================
- Features: 3 Passed / 0 Failed (100%)  |  Scenarios: 20 Passed / 0 Failed (100%)  |  Steps: 85 Passed
+ Features: 3 Passed / 0 Failed (100%)  |  Scenarios: 17 Passed / 0 Failed (100%)  |  Steps: 71 Passed
  Total Duration: 24.31s                |  Status: PASSED                         |  Build: #1
 ========================================================================================================
 
 --------------------------------------------------------------------------------------------------------
 Feature                                              Steps (Pass/Fail)    Scenarios (Pass/Fail)   Status
 --------------------------------------------------------------------------------------------------------
-POST /pet - Pet Creation Scenarios                   35 / 0 (100%)        8 / 0 (100%)            PASSED
-GET /pet/findByStatus - Find Pets by Status          28 / 0 (100%)        7 / 0 (100%)            PASSED
-DELETE /pet/{petId} - Pet Deletion Scenarios         22 / 0 (100%)        5 / 0 (100%)            PASSED
+POST /pet - Pet Creation Scenarios                   29 / 0 (100%)        7 / 0 (100%)            PASSED
+GET /pet/findByStatus - Find Pets by Status          24 / 0 (100%)        6 / 0 (100%)            PASSED
+DELETE /pet/{petId} - Pet Deletion Scenarios         18 / 0 (100%)        4 / 0 (100%)            PASSED
 --------------------------------------------------------------------------------------------------------
-TOTAL                                                85 / 0 (100%)        20 / 0 (100%)           PASSED
+TOTAL                                                71 / 0 (100%)        17 / 0 (100%)           PASSED
 ========================================================================================================
 ```
 
@@ -182,7 +185,7 @@ Each scenario provides expandable step execution records, timestamps, and embedd
 <!-- Example of scenario structure rendered in Cucumber HTML Reports -->
 <div class="card scenario-container">
   <div class="card-header bg-success text-white">
-    <span class="badge badge-light">@smoke</span>
+    <span class="badge badge-light">@sanity</span>
     <span class="badge badge-light">@post</span>
     <strong>Scenario:</strong> Successfully create a new pet with dynamic ID and valid payload
     <span class="float-right badge badge-success">PASSED (421ms)</span>

@@ -1,13 +1,11 @@
 package com.almezi.context;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.microsoft.playwright.APIRequestContext;
 import com.microsoft.playwright.APIResponse;
 import com.microsoft.playwright.Playwright;
 import com.microsoft.playwright.options.RequestOptions;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class TestContext {
@@ -18,7 +16,6 @@ public class TestContext {
     private APIResponse response;
     private String responseBody;
     private Long lastPetId;
-    private final Map<String, Object> session = new HashMap<>();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public static TestContext get() {
@@ -87,30 +84,6 @@ public class TestContext {
         return resp;
     }
 
-    public APIResponse postRaw(String endpoint, String body, Map<String, String> headers) {
-        RequestOptions options = RequestOptions.create().setData(body);
-        if (headers != null) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                options.setHeader(entry.getKey(), entry.getValue());
-            }
-        }
-        APIResponse resp = requestContext.post(endpoint, options);
-        setResponse(resp);
-        return resp;
-    }
-
-    public Map<String, Object> getSession() {
-        return session;
-    }
-
-    public Object getSessionAttribute(String key) {
-        return session.get(key);
-    }
-
-    public void setSessionAttribute(String key, Object value) {
-        session.put(key, value);
-    }
-
     public ObjectMapper getObjectMapper() {
         return objectMapper;
     }
@@ -119,6 +92,5 @@ public class TestContext {
         response = null;
         responseBody = null;
         lastPetId = null;
-        session.clear();
     }
 }

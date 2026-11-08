@@ -15,24 +15,40 @@ public class Hooks {
 
     private static final String BASE_URL = System.getProperty("base.url", "https://petstore.swagger.io/v2/");
 
+    private static volatile Playwright shared;
+
+    private static Playwright sharedPlaywright() {
+        Playwright local = shared;
+        if (local == null) {
+            synchronized (Hooks.class) {
+                local = shared;
+                if (local == null) {
+                    local = Playwright.create();
+                    shared = local;
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> shared.close()));
+                }
+            }
+        }
+        return local;
+    }
+
     @Before
     public void setUp(Scenario scenario) {
         TestContext context = TestContext.get();
         context.reset();
 
-        Playwright playwright = Playwright.create();
+        Playwright playwright = sharedPlaywright();
         context.setPlaywright(playwright);
 
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
         headers.put("Accept", "application/json");
-        headers.put("api_key", "special-key");
+        headers.put("api_key", System.getProperty("api.key", "special-key"));
 
         APIRequestContext requestContext = playwright.request().newContext(
                 new APIRequest.NewContextOptions()
                         .setBaseURL(BASE_URL)
                         .setExtraHTTPHeaders(headers)
-                        .setIgnoreHTTPSErrors(true)
         );
         context.setRequestContext(requestContext);
     }
@@ -47,14 +63,10 @@ public class Hooks {
                         context.getResponseBody() != null ? context.getResponseBody() : "");
                 scenario.attach(log.getBytes(), "text/plain", "API Response");
             }
-
+        } finally {
             if (context.getRequestContext() != null) {
                 context.getRequestContext().dispose();
             }
-            if (context.getPlaywright() != null) {
-                context.getPlaywright().close();
-            }
-        } finally {
             TestContext.remove();
         }
     }
