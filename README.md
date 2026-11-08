@@ -27,9 +27,9 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 │       │   └── com
 │       │       └── almezi
 │       │           ├── context
-│       │           │   └── TestContext.java          # Thread-safe context management & session state
+│       │           │   └── TestContext.java          # Thread-safe context management & dynamic pet IDs
 │       │           ├── hooks
-│       │           │   └── Hooks.java                # Setup/TearDown Playwright lifecycle & report attachments
+│       │           │   └── Hooks.java                # Shared Playwright lifecycle, request setup & report attachments
 │       │           ├── model
 │       │           │   ├── Category.java             # Category model
 │       │           │   ├── Pet.java                  # Pet domain model
@@ -40,6 +40,7 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 │       │               └── PetStepDefinitions.java   # Step definitions using Playwright APIRequestContext
 │       └── resources
 │           ├── cucumber.properties                   # Cucumber runtime & plugin configurations
+│           ├── junit-platform.properties             # Default @regression tag filter (-Dcucumber.filter.tags overrides it)
 │           └── features
 │               ├── pet_post.feature                  # POST /pet scenarios (creation & validation)
 │               ├── pet_find_by_status.feature        # GET /pet/findByStatus scenarios (status filters)
@@ -51,6 +52,14 @@ An automated API test suite for the Swagger Petstore API designed to maximize te
 ## 🧪 Testing & Test Execution
 
 > **Requirement**: JDK 21 (LTS). The build compiles with `--release 21`, so Maven must run on JDK 21+ (`JAVA_HOME` pointed at a JDK 21 install).
+
+### Runtime Configuration
+`Hooks` reads two system properties, so the same suite can target another environment without code changes:
+
+| Property | Default | Purpose |
+|---|---|---|
+| `base.url` | `https://petstore.swagger.io/v2/` | Target API base URL, e.g. `mvn test -Dbase.url=https://staging.example.com/v2/` |
+| `api.key` | `special-key` | Value sent as the `api_key` request header, e.g. `mvn test -Dapi.key=...` |
 
 ### 1. Execute the Default Test Suite & Generate Reports
 The suite contains 20 scenarios; the default run selects the 17 tagged `@regression` and skips the 3 `@sanity` scenarios (execute those via `mvn test -Dcucumber.filter.tags="@sanity"`), producing complete execution analytics:
@@ -164,7 +173,7 @@ When generated via `mvn clean verify` or `mvn net.masterthought:maven-cucumber-r
                                    Petstore API Automation Report
 ========================================================================================================
  Features: 3 Passed / 0 Failed (100%)  |  Scenarios: 17 Passed / 0 Failed (100%)  |  Steps: 71 Passed
- Total Duration: 24.31s                |  Status: PASSED                         |  Build: #1
+ Total Duration: 24.99s                |  Status: PASSED                         |  Build: #1
 ========================================================================================================
 
 --------------------------------------------------------------------------------------------------------
@@ -187,16 +196,17 @@ Each scenario provides expandable step execution records, timestamps, and embedd
   <div class="card-header bg-success text-white">
     <span class="badge badge-light">@sanity</span>
     <span class="badge badge-light">@post</span>
-    <strong>Scenario:</strong> Successfully create a new pet with dynamic ID and valid payload
+    <strong>Scenario:</strong> Successfully add a new valid pet
     <span class="float-right badge badge-success">PASSED (421ms)</span>
   </div>
   <div class="card-body">
     <ul class="steps-list">
       <li class="step passed">✔ <strong>Given</strong> the pet API endpoint is available</li>
-      <li class="step passed">✔ <strong>When</strong> I create a pet with dynamic ID, name "Fluffy" and status "available"</li>
+      <li class="step passed">✔ <strong>When</strong> I create a pet with dynamic ID, name "BuddyPlaywright" and status "available"</li>
       <li class="step passed">✔ <strong>Then</strong> the response status code should be 200</li>
-      <li class="step passed">✔ <strong>And</strong> the response pet name should be "Fluffy"</li>
+      <li class="step passed">✔ <strong>And</strong> the response pet name should be "BuddyPlaywright"</li>
       <li class="step passed">✔ <strong>And</strong> the response pet status should be "available"</li>
+      <li class="step passed">✔ <strong>And</strong> the response pet id should match the created dynamic ID</li>
     </ul>
 
     <!-- Embedded HTTP API Response Attachment -->
@@ -208,7 +218,7 @@ Each scenario provides expandable step execution records, timestamps, and embedd
         <pre class="bg-dark text-light p-2 rounded"><code>{
   "id": 1729613524001,
   "category": { "id": 1, "name": "Dogs" },
-  "name": "Fluffy",
+  "name": "BuddyPlaywright",
   "photoUrls": ["https://example.com/photo.jpg"],
   "tags": [{ "id": 1, "name": "friendly" }],
   "status": "available"
